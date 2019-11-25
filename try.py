@@ -1,3 +1,4 @@
+
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 import re
@@ -8,11 +9,6 @@ fileName, eFile, qFile = sys.argv[1], sys.argv[2], sys.argv[3]
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 TRAIN_PATH = os.path.join(ROOT_PATH, fileName)
 sentences = []
-
-'''
-ssss = "aa/bb cc/dd ee/ff"
-print(re.sub(r'(^|\s).+?(/)', ' ', ssss))
-'''
 
 
 def readTrain():
@@ -29,19 +25,21 @@ def removeEmissions(txt):
     return [(re.sub(r'(^|\s).+?(/)', ' ', sentence)).strip() for sentence in txt]
 
 
-'''
-def countTransmissions(tagSet):
-    vec = CountVectorizer(lowercase=False, ngram_range=(1, 3), analyzer=removeTransitions)
-    a = vec.fit_transform(tagSet).toarray()
+def countTransmissions(tagsSet):
+    vec = CountVectorizer(lowercase=False, ngram_range=(1, 3))
+    a = vec.fit_transform(tagsSet).toarray()
+    print(vec.vocabulary_)
     print(vec.get_feature_names())
     return a
 
 
-def countEmissions(wordSet):
+def countEmissions(wordsSet):
     vec = CountVectorizer(lowercase=False)
-    return vec.fit_transform(wordSet).toarray()
+    a = vec.fit_transform(wordsSet).toarray()
+    print(vec.vocabulary_)
+    print(vec.get_feature_names())
+    return a
 
-'''
 '''
 def saveToFile(fileName, data):
 
@@ -51,9 +49,13 @@ def saveToFile(fileName, data):
 '''
 
 readTrain()
-print(removeTransitions(sentences))
-#countTags = countTransmissions([tags[0]])
-#countWords = countEmissions(words)
-
+tags = removeEmissions(sentences)
+words = removeTransitions(sentences)
+print(words[1])
+print(tags[1])
+countTags = countTransmissions([tags[1]])
+countWords = countEmissions([words[1]])
+print(np.sum(countTags))
+print(np.sum(countWords))
 #saveToFile(eFile, countWords)
 #saveToFile(qFile, countTags)
