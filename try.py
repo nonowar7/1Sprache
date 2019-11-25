@@ -11,6 +11,17 @@ TRAIN_PATH = os.path.join(ROOT_PATH, fileName)
 sentences = []
 
 
+'''
+def removeTransitions(txt):
+    return re.sub(r'(/.+?(\s|$))', ' ', txt).rstrip()
+'''
+
+
+def removeEmissions(txt):
+    return re.sub(r'(^|\s).+?(/)', ' ', txt).strip()
+
+
+
 def readTrain():
     with open(TRAIN_PATH, 'r', encoding="utf8") as f:
         global sentences
@@ -27,35 +38,17 @@ def removeEmissions(txt):
 
 def countTransmissions(tagsSet):
     vec = CountVectorizer(lowercase=False, ngram_range=(1, 3))
-    a = vec.fit_transform(tagsSet).toarray()
-    print(vec.vocabulary_)
-    print(vec.get_feature_names())
+    a = vec.fit_transform(tagsSet)
     return a
 
 
 def countEmissions(wordsSet):
     vec = CountVectorizer(lowercase=False)
-    a = vec.fit_transform(wordsSet).toarray()
-    print(vec.vocabulary_)
+    a = vec.fit_transform(wordsSet)
     print(vec.get_feature_names())
     return a
 
-'''
-def saveToFile(fileName, data):
-
-    path = os.path.join(ROOT_PATH, fileName)
-    with open(path, 'a', encoding="utf8") as f:
-        f.write()
-'''
 
 readTrain()
-tags = removeEmissions(sentences)
-words = removeTransitions(sentences)
-print(words[1])
-print(tags[1])
-countTags = countTransmissions([tags[1]])
-countWords = countEmissions([words[1]])
-print(np.sum(countTags))
-print(np.sum(countWords))
-#saveToFile(eFile, countWords)
-#saveToFile(qFile, countTags)
+countTags = countTransmissions(sentences)
+countWords = countEmissions(sentences)

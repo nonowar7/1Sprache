@@ -18,10 +18,6 @@ def readTrain():
         return f.read().splitlines()
 
 
-def removeTransitions(txt):
-    return re.sub(r'(/.+?(\s|$))', ' ', txt).rstrip()
-
-
 def removeEmissions(txt):
     return re.sub(r'(^|\s).+?(/)', ' ', txt).strip()
 
@@ -34,9 +30,11 @@ def countTransmissions(tagsSet):
 
 
 def countEmissions(wordsSet):
-    vec = CountVectorizer(lowercase=False, preprocessor=removeTransitions)
-    values = (vec.fit_transform(wordsSet)).sum(axis=0).A1
+
+    vec = CountVectorizer(lowercase=False, token_pattern=r"(?u)\b[a-zA-Z0-9_._,_''_'_!_?_/]{1,}\b")
+    values = vec.fit_transform(wordsSet).sum(axis=0).A1
     names = vec.get_feature_names()
+    names = [re.sub("/", " ", s) for s in names]
     return dict(zip(names, values))
 
 
@@ -46,10 +44,23 @@ def saveToFile(filePath, data):
         f.write('\n'.join('\t'.join((key, str(data[key]))) for key in data))
 
 
-# need to count for 1 char?
+def getQ(t1, t2=None, t3=None):
+    if t2 is None and t3 is None:
+        return transitions[t1]/sumQ
+    if t3 is None:
+        return transitions[t1 + " " + t2]/sumQ
+    return transitions[t1 + " " + t2 + " " + t3] / sumQ
 
+
+def getE(x,y):
+    return emissions[x + " " + y]/sumE
+
+# need to count for 1 char?
 sentences = readTrain()
-transitions = countTransmissions(sentences)
 emissions = countEmissions(sentences)
+transitions = countTransmissions(sentences)
 saveToFile(Q_PATH, transitions)
 saveToFile(E_PATH, emissions)
+#calculate in loading
+sumQ = sum(transitions.values())
+sumE = sum(emissions.values())
