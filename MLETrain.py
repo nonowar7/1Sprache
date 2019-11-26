@@ -1,59 +1,54 @@
+
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
+import pandas as pd
+import re
 import sys
 import os
 
-fileName, eFile, qFile = sys.argv[1], sys.argv[2], sys.argv[3]
+
+fileName, qFile, eFile = sys.argv[1], sys.argv[2], sys.argv[3]
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 TRAIN_PATH = os.path.join(ROOT_PATH, fileName)
-sentences = []
+Q_PATH = os.path.join(ROOT_PATH, qFile)
+E_PATH = os.path.join(ROOT_PATH, eFile)
 
 
-def readTrain():
-    with open(TRAIN_PATH, 'r', encoding="utf8") as f:
-        global sentences
-        sentences = f.read().splitlines()
+def readFile(PATH):
+    with open(PATH, 'r', encoding="utf8") as f:
+        return f.read().splitlines()
 
 
-def extractWordsAndTags():
-    e, q = [], []
-    for i in sentences:
-        emissions, transitions = [], []
-        sentence = i.split(" ")
-        for j in sentence:
-            pair = j.split("/")
-            emissions.append(pair[0])
-            transitions.append(pair[1])
-        e.append(" ".join(emissions))
-        q.append(" ".join(transitions))
-    return e, q
+def removeEmissions(txt):
+    return re.sub(r'(^|\s).+?(/)', ' ', txt).strip()
 
 
-def countTransmissions(tagSet):
-    vec = CountVectorizer(lowercase=False, ngram_range=(1, 3))
-
-    a = vec.fit_transform(tagSet).toarray()
-    print(vec.get_feature_names())
-    return a
-
-
-def countEmissions(wordSet):
-    vec = CountVectorizer(lowercase=False)
-    return vec.fit_transform(wordSet).toarray()
+def countTransmissions(tagsSet):
+    vec = CountVectorizer(lowercase=False, ngram_range=(1,3), preprocessor=removeEmissions)
+    values = vec.fit_transform(tagsSet).sum(axis=0).A1
+    names = vec.get_feature_names()
+    return dict(zip(names, values))
 
 
-'''
-def saveToFile(fileName, data):
+def countEmissions(wordsSet):
+    vec = CountVectorizer(lowercase=False, token_pattern=r"(?u)\b[a-zA-Z0-9_._,_''_'_!_?_/]{1,}\b")
+    values = vec.fit_transform(wordsSet).sum(axis=0).A1
+    names = vec.get_feature_names()
+    names = [re.sub("/", " ", s) for s in names]
+    return dict(zip(names, values))
 
-    path = os.path.join(ROOT_PATH, fileName)
-    with open(path, 'a', encoding="utf8") as f:
-        f.write()
-'''
 
-readTrain()
-words, tags = extractWordsAndTags()
-countTags = countTransmissions([tags[0]])
-countWords = countEmissions(words)
+def saveToFile(filePath, data):
+    path = os.path.join(ROOT_PATH, filePath)
+    with open(path, 'w', encoding="utf8") as f:
+        f.write('\n'.join('\t'.join((key, str(data[key]))) for key in data))
 
-#saveToFile(eFile, countWords)
-#saveToFile(qFile, countTags)
+
+def runTrain():
+    sentences = readFile(TRAIN_PATH)
+    saveToFile(Q_PATH, countTransmissions(sentences))
+    saveToFile(E_PATH, countEmissions(sentences))
+
+
+runTrain()
+# need to count for 1 char?
