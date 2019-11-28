@@ -20,11 +20,12 @@ def readFile(PATH):
 
 
 def removeEmissions(txt):
-    return re.sub(r'(^|\s).+?(/)', ' ', txt).strip()
+    arr = txt.split()
+    return str(' '.join((re.split('/|//', i)[-1]) for i in arr))
 
 
 def countTransmissions(tagsSet):
-    vec = CountVectorizer(lowercase=False, ngram_range=(1,3), preprocessor=removeEmissions)
+    vec = CountVectorizer(lowercase=False, ngram_range=(1, 3), preprocessor=removeEmissions)
     values = vec.fit_transform(tagsSet).sum(axis=0).A1
     names = vec.get_feature_names()
     return dict(zip(names, values))

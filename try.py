@@ -5,21 +5,10 @@ import re
 import sys
 import os
 
-fileName, eFile, qFile = sys.argv[1], sys.argv[2], sys.argv[3]
+fileName = sys.argv[1]
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 TRAIN_PATH = os.path.join(ROOT_PATH, fileName)
 sentences = []
-
-
-'''
-def removeTransitions(txt):
-    return re.sub(r'(/.+?(\s|$))', ' ', txt).rstrip()
-'''
-
-
-def removeEmissions(txt):
-    return re.sub(r'(^|\s).+?(/)', ' ', txt).strip()
-
 
 
 def readTrain():
@@ -28,27 +17,15 @@ def readTrain():
         sentences = f.read().splitlines()
 
 
-def removeTransitions(txt):
-    return [(re.sub(r'(/.+?(\s|$))', ' ', sentence)).rstrip() for sentence in txt]
-
-
 def removeEmissions(txt):
-    return [(re.sub(r'(^|\s).+?(/)', ' ', sentence)).strip() for sentence in txt]
+    arr = txt.split()
+    print(str(' '.join((re.split('/|//', i)[-1]) for i in arr)))
+    return str(' '.join((re.split('/|//', i)[-1]) for i in arr))
 
 
 def countTransmissions(tagsSet):
-    vec = CountVectorizer(lowercase=False, ngram_range=(1, 3))
-    a = vec.fit_transform(tagsSet)
-    return a
+    vec = CountVectorizer(lowercase=False, preprocessor=removeEmissions)
+    values = vec.fit_transform(tagsSet).sum(axis=0).A1
+    names = vec.get_feature_names()
+    return dict(zip(names, values))
 
-
-def countEmissions(wordsSet):
-    vec = CountVectorizer(lowercase=False)
-    a = vec.fit_transform(wordsSet)
-    print(vec.get_feature_names())
-    return a
-
-
-readTrain()
-countTags = countTransmissions(sentences)
-countWords = countEmissions(sentences)
